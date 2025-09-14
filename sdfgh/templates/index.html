@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>E-Waste Classification</title>
+  <script>
+    // Predict from file
+    async function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      const formData = new FormData();
+      formData.append("image", fileInput.files[0]);
+      const res = await fetch("/predict_file", { method: "POST", body: formData });
+      const data = await res.json();
+      document.getElementById("result").innerText = "Prediction: " + data.prediction;
+    }
+
+    // Predict from URL
+    async function predictFromURL() {
+      const url = document.getElementById("urlInput").value;
+      const res = await fetch("/predict_url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      document.getElementById("result").innerText = "Prediction: " + data.prediction;
+    }
+
+    // Capture from Camera
+    async function captureImage() {
+      const video = document.getElementById("video");
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL("image/jpeg");
+      
+      const res = await fetch("/predict_camera", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageData })
+      });
+      const data = await res.json();
+      document.getElementById("result").innerText = "Prediction: " + data.prediction;
+    }
+
+    // Start camera
+    async function startCamera() {
+      const video = document.getElementById("video");
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+    }
+  </script>
+</head>
+<body>
+  <h1>E-Waste Classifier ⚡</h1>
+
+  <!-- Upload File -->
+  <h3>Upload an Image</h3>
+  <input type="file" id="fileInput">
+  <button onclick="uploadFile()">Classify</button>
+
+  <!-- URL Input -->
+  <h3>Paste Image URL</h3>
+  <input type="text" id="urlInput" placeholder="Enter image URL">
+  <button onclick="predictFromURL()">Classify</button>
+
+  <!-- Camera -->
+  <h3>Live Camera</h3>
+  <video id="video" autoplay playsinline width="320" height="240"></video><br>
+  <button onclick="startCamera()">Start Camera</button>
+  <button onclick="captureImage()">Capture & Classify</button>
+
+  <h2 id="result">Prediction: </h2>
+</body>
+</html>
